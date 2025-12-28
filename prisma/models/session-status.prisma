@@ -1,0 +1,6 @@
+enum SessionStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  EXPIRED
+}

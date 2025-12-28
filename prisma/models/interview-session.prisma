@@ -1,0 +1,58 @@
+model InterviewSession {
+  id             String          @id @default(cuid())
+  jdId           String?
+  level          InterviewLevel
+  numQuestions   Int
+  timeLimit      Int
+  status         SessionStatus   @default(PENDING)
+  createdBy      String
+  uniqueLink     String          @unique
+  createdAt      DateTime        @default(now())
+  industry       Industry        @default(IT)
+  language       Language        @default(VIETNAMESE)
+  position       String?
+  stack          TechStack?
+  candidateEmail String
+  answers        Answer[]
+  jobDescription JobDescription? @relation(fields: [jdId], references: [id], onDelete: Cascade)
+  questions      Question[]
+
+  @@index([jdId])
+  @@index([uniqueLink])
+  @@index([candidateEmail])
+}
+
+enum InterviewLevel {
+  INTERN
+  FRESHER
+  JUNIOR
+  MIDDLE
+  SENIOR
+  EXPERT
+}
+
+enum TechStack {
+  BACKEND
+  FRONTEND
+  FULLSTACK
+  DEVOPS
+  MOBILE
+  DATA
+  QA
+  SECURITY
+  CLOUD
+  AI_ML
+}
+
+enum Industry {
+  IT
+  HEALTHCARE
+  FINANCE
+  EDUCATION
+  RETAIL
+  MANUFACTURING
+  MARKETING
+  HR
+  LEGAL
+  OTHER
+}

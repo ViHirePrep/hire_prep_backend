@@ -1,0 +1,15 @@
+model AIProviderConfig {
+  id            String   @id @default(cuid())
+  providerAlias String   @unique
+  baseProvider  String
+  displayName   String
+  apiUrl        String?
+  isActive      Boolean  @default(true)
+  priority      Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([baseProvider])
+  @@index([isActive])
+  @@map("AIProviderConfig")
+}

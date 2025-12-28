@@ -1,0 +1,13 @@
+model ActivityLog {
+  id        String   @id @default(cuid())
+  userId    String
+  service   String
+  action    String
+  timestamp DateTime @default(now())
+  oldData   Json?
+  newData   Json?
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([timestamp])
+}
