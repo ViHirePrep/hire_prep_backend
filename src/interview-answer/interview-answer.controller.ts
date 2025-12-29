@@ -12,6 +12,7 @@ import {
 import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
 
 import { CreateInterviewAnswerDto } from './dto/create-interview-answer.dto';
+import { SubmitAnswersDto } from './dto/submit-answers.dto';
 import { UpdateInterviewAnswerDto } from './dto/update-interview-answer.dto';
 import { InterviewAnswerService } from './interview-answer.service';
 
@@ -33,13 +34,8 @@ export class InterviewAnswerController {
   }
 
   @Post('submit')
-  async submitAnswers(@Body() body: any) {
-    return this.interviewAnswerService.submitAnswers(body);
-  }
-
-  @Get()
-  findAll() {
-    return this.interviewAnswerService.findAll();
+  async submitAnswers(@Body() submitAnswersDto: SubmitAnswersDto) {
+    return this.interviewAnswerService.submitAnswers(submitAnswersDto);
   }
 
   @Get(':id')

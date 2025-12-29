@@ -54,10 +54,11 @@ export class VietnamesePromptBuilder extends PromptBuilder {
         'Xem xét cách tiếp cận giải quyết vấn đề và phương pháp luận',
         'Cân nhắc sự phù hợp với yêu cầu công việc và tiêu chuẩn ngành',
         'Cung cấp phản hồi mang tính xây dựng để cải thiện',
+        'Chấm điểm (0-100) cho TỪNG câu hỏi',
       ],
       requirementsLabel: 'Yêu cầu đánh giá',
       jsonFormatInstruction:
-        'VUI LÒNG TRẢ LỜI BẰNG TIẾNG VIỆT. Cung cấp đánh giá toàn diện theo định dạng JSON:',
+        'TRẢ VỀ CHỈ ĐỊNH DẠNG JSON HỢP LỆ (không dùng markdown, không bọc trong ```json). Ví dụ: {"overallScore": 85, "strengths": ["Giỏi PHP"], "weaknesses": ["Yếu bảo mật"], "recommendations": ["Học thêm về CSRF"], "detailedFeedback": [{"questionText": "DI là gì?", "score": 80, "feedback": "Giải thích tốt"}]}',
       overallScoreLabel: 'overallScore',
       strengthsLabel: 'strengths',
       weaknessesLabel: 'weaknesses',

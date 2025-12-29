@@ -7,7 +7,6 @@ import {
 } from '@nestjs/common';
 
 import { QuestionService } from '../interview-question/interview-question.service';
-import { JobDescriptionService } from '../job-description/job-description.service';
 import { PrismaService } from '../prisma/prisma.service';
 
 import { CreateSessionDto } from './dto/create-session.dto';
@@ -16,7 +15,6 @@ import { CreateSessionDto } from './dto/create-session.dto';
 export class InterviewSessionService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly jobDescriptionService: JobDescriptionService,
     private readonly questionService: QuestionService,
   ) {}
 
@@ -25,7 +23,6 @@ export class InterviewSessionService {
     createdBy: string,
     candidateEmail: string,
   ) {
-    console.log(dto, 'haha');
     let jobDescriptionText: string | null = null;
     let jdId: string | null = null;
 
@@ -108,7 +105,7 @@ export class InterviewSessionService {
       where: { id },
       include: {
         jobDescription: true,
-        questions: {
+        interviewQuestions: {
           orderBy: { order: 'asc' },
         },
       },
@@ -126,7 +123,7 @@ export class InterviewSessionService {
       where: { sessionLink },
       include: {
         jobDescription: true,
-        questions: {
+        interviewQuestions: {
           orderBy: { order: 'asc' },
           select: {
             id: true,
@@ -147,25 +144,12 @@ export class InterviewSessionService {
     return session;
   }
 
-  async findByCreator(userId: string) {
-    return this.prisma.interviewSession.findMany({
-      where: { createdBy: userId },
-      orderBy: { createdAt: 'desc' },
-      include: {
-        jobDescription: {
-          select: {
-            fileUrl: true,
-          },
-        },
-        _count: {
-          select: {
-            questions: true,
-            answers: true,
-          },
-        },
-      },
-    });
-  }
+  // async submitFeedback(
+  //   id: string,
+  //   feedbackData: { rating: number; feedback: string },
+  // ) {
+  //   return { success: true };
+  // }
 
   async updateStatus(
     id: string,

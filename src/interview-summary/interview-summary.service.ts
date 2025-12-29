@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 
 import { AIService } from '../ai/ai.service';
 import { PromptBuilderFactory } from '../ai/prompt-builders';
@@ -17,6 +17,9 @@ export interface InterviewEvaluation {
   recommendations: string[];
   detailedFeedback: {
     questionId: string;
+    questionText: string;
+    candidateAnswer: string;
+    expectedAnswer: string;
     score: number;
     feedback: string;
   }[];
@@ -35,17 +38,17 @@ export class InterviewSummaryService {
     const session = await this.prisma.interviewSession.findUnique({
       where: { id: input.sessionId },
       include: {
-        questions: {
+        interviewQuestions: {
           orderBy: { order: 'asc' },
           include: {
-            answers: true,
+            interviewAnswer: true,
           },
         },
       },
     });
 
     if (!session) {
-      throw new Error('Interview session not found');
+      throw new NotFoundException('Interview session not found');
     }
 
     const prompt = this.buildEvaluationPrompt(session, input.language);
@@ -58,22 +61,28 @@ export class InterviewSummaryService {
     return this.parseEvaluationResponse(session, aiResponse);
   }
 
+  private buildQuestionsAndAnswers(session: any) {
+    return session?.interviewQuestions.map((question: any) => ({
+      questionId: question.id,
+      questionText: question.questionText,
+      expectedAnswer: question.expectedAnswer || 'No expected answer provided',
+      candidateAnswer:
+        question.interviewAnswer?.candidateAnswerText || 'No answer provided',
+      difficulty: question.difficulty,
+    }));
+  }
+
   private buildEvaluationPrompt(
     session: any,
     language: 'en' | 'vi' = 'vi',
   ): string {
-    const questionsAndAnswers = session.questions.map((question: any) => ({
-      questionText: question.questionText,
-      expectedAnswer: question.expectedAnswer || 'No expected answer provided',
-      candidateAnswer:
-        question.answers[0]?.candidateAnswerText || 'No answer provided',
-      difficulty: question.difficulty,
-    }));
+    const questionsAndAnswers = this.buildQuestionsAndAnswers(session);
 
     const promptBuilder = PromptBuilderFactory.get(language);
 
     return promptBuilder.buildEvaluationPrompt(questionsAndAnswers, session);
   }
+
   private parseEvaluationResponse(
     session: any,
     aiResponse: any,
@@ -90,7 +99,6 @@ export class InterviewSummaryService {
         parsedResponse = aiResponse;
       }
 
-      const overallScore = parsedResponse.overallScore || 0;
       const strengths = Array.isArray(parsedResponse.strengths)
         ? parsedResponse.strengths
         : [];
@@ -104,42 +112,64 @@ export class InterviewSummaryService {
       let detailedFeedback = [];
 
       if (Array.isArray(parsedResponse.detailedFeedback)) {
-        detailedFeedback = session.questions.map((q: any) => {
-          let aiFeedback = parsedResponse.detailedFeedback.find(
-            (feedback: any) => feedback.questionId === q.id,
-          );
-
-          if (!aiFeedback) {
-            aiFeedback = parsedResponse.detailedFeedback.find(
-              (feedback: any) => feedback.questionText === q.questionText,
+        detailedFeedback = session.interviewQuestions.map(
+          (q: any, index: number) => {
+            let aiFeedback = parsedResponse.detailedFeedback.find(
+              (feedback: any) => feedback.questionId === q.id,
             );
-          }
 
-          if (!aiFeedback && parsedResponse.detailedFeedback.length > 0) {
-            const questionIndex = session.questions.findIndex(
-              (question: any) => question.id === q.id,
-            );
-            if (questionIndex < parsedResponse.detailedFeedback.length) {
-              aiFeedback = parsedResponse.detailedFeedback[questionIndex];
+            if (!aiFeedback) {
+              aiFeedback = parsedResponse.detailedFeedback.find(
+                (feedback: any) => feedback.questionText === q.questionText,
+              );
             }
-          }
 
-          return {
-            questionId: q.id,
-            score: aiFeedback?.score || 0,
-            feedback: aiFeedback?.feedback || 'No specific feedback',
-          };
-        });
+            // Fallback to index if no ID or Text match found
+            if (!aiFeedback && parsedResponse.detailedFeedback[index]) {
+              aiFeedback = parsedResponse.detailedFeedback[index];
+            }
+
+            let score = aiFeedback?.score || 0;
+            // Normalize score to 0-100 scale if it seems to be 0-10
+            if (score > 0 && score <= 10) {
+              score = score * 10;
+            }
+
+            return {
+              questionId: q.id,
+              questionText: q.questionText,
+              candidateAnswer:
+                q.interviewAnswer?.candidateAnswerText || 'No answer provided',
+              expectedAnswer: q.expectedAnswer || 'No expected answer',
+              score: score,
+              feedback: aiFeedback?.feedback || 'No specific feedback',
+            };
+          },
+        );
       } else {
-        detailedFeedback = session.questions.map((q: any) => ({
+        detailedFeedback = session.interviewQuestions.map((q: any) => ({
           questionId: q.id,
+          questionText: q.questionText,
+          candidateAnswer:
+            q.interviewAnswer?.candidateAnswerText || 'No answer provided',
+          expectedAnswer: q.expectedAnswer || 'No expected answer',
           score: 0,
           feedback: 'No feedback provided',
         }));
       }
 
+      // Calculate real overall score based on average of question scores
+      const totalQuestions = detailedFeedback.length;
+      const calculatedTotalScore =
+        totalQuestions > 0
+          ? detailedFeedback.reduce(
+              (sum, item: any) => sum + (item.score || 0),
+              0,
+            ) / totalQuestions
+          : 0;
+
       return {
-        overallScore: Math.round(overallScore),
+        overallScore: Math.round(calculatedTotalScore),
         strengths,
         weaknesses,
         recommendations,
@@ -151,8 +181,12 @@ export class InterviewSummaryService {
         strengths: [],
         weaknesses: [],
         recommendations: [],
-        detailedFeedback: session.questions.map((q: any) => ({
+        detailedFeedback: session.interviewQuestions.map((q: any) => ({
           questionId: q.id,
+          questionText: q.questionText,
+          candidateAnswer:
+            q.interviewAnswer?.candidateAnswerText || 'No answer provided',
+          expectedAnswer: q.expectedAnswer || 'No expected answer',
           score: 0,
           feedback: 'Could not evaluate answer',
         })),

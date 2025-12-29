@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsBoolean } from 'class-validator';
+import { IsString, IsOptional } from 'class-validator';
 
 export class CreateInterviewAnswerDto {
   @IsString()
@@ -8,6 +8,6 @@ export class CreateInterviewAnswerDto {
   sessionId: string;
 
   @IsOptional()
-  @IsBoolean()
+  @IsString()
   candidateAnswerText: string;
 }

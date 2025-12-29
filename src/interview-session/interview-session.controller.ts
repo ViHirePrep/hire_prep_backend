@@ -40,11 +40,6 @@ export class InterviewSessionController {
     );
   }
 
-  @Get()
-  async getMySessions(@Req() req: any) {
-    return this.interviewSessionService.findByCreator(req.user.userId);
-  }
-
   @Get(':id')
   async getSession(@Param('id') id: string) {
     return this.interviewSessionService.findById(id);
@@ -58,5 +53,15 @@ export class InterviewSessionController {
   @Delete(':id')
   async deleteSession(@Param('id') id: string, @Req() req: any) {
     return this.interviewSessionService.delete(id, req.user.userId);
+  }
+  @Post(':id/feedback')
+  submitFeedback(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    @Param('id') id: string,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    @Body() feedbackData: { rating: number; feedback: string },
+  ) {
+    // return this.interviewSessionService.submitFeedback(id, feedbackData);
+    return;
   }
 }

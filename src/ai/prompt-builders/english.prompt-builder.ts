@@ -54,10 +54,11 @@ export class EnglishPromptBuilder extends PromptBuilder {
         'Evaluate problem-solving approach and methodology',
         'Consider alignment with job requirements and industry standards',
         'Provide constructive feedback for improvement',
+        'Assign a score (0-100) for EACH question',
       ],
       requirementsLabel: 'Evaluation Requirements',
       jsonFormatInstruction:
-        'Provide a comprehensive evaluation in JSON format:',
+        'Return ONLY valid JSON (no markdown formatting, no ```json wrapper). Example: {"overallScore": 85, "strengths": ["Strong PHP knowledge"], "weaknesses": ["Weak on security"], "recommendations": ["Study CSRF"], "detailedFeedback": [{"questionText": "What is DI?", "score": 80, "feedback": "Good explanation"}]}',
       overallScoreLabel: 'overallScore',
       strengthsLabel: 'strengths',
       weaknessesLabel: 'weaknesses',

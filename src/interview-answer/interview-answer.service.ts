@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 
 import { InterviewSummaryService } from '../interview-summary/interview-summary.service';
 import { PrismaService } from '../prisma/prisma.service';
 
 import { CreateInterviewAnswerDto } from './dto/create-interview-answer.dto';
+import { SubmitAnswersDto } from './dto/submit-answers.dto';
 import { UpdateInterviewAnswerDto } from './dto/update-interview-answer.dto';
 
 @Injectable()
@@ -23,19 +24,11 @@ export class InterviewAnswerService {
     });
   }
 
-  async findAll() {
-    return this.prisma.interviewAnswer.findMany({
-      include: {
-        question: true,
-      },
-    });
-  }
-
   async findOne(id: string) {
     return this.prisma.interviewAnswer.findUnique({
       where: { id },
       include: {
-        question: true,
+        interviewQuestion: true,
       },
     });
   }
@@ -44,7 +37,7 @@ export class InterviewAnswerService {
     return this.prisma.interviewAnswer.findMany({
       where: { sessionId },
       include: {
-        question: true,
+        interviewQuestion: true,
       },
       orderBy: {
         createdAt: 'asc',
@@ -60,13 +53,14 @@ export class InterviewAnswerService {
       },
     });
 
-    if (!existingAnswer) throw new Error('Answer not found');
+    if (existingAnswer)
+      throw new BadRequestException('You have already answered this question');
 
-    return this.prisma.interviewAnswer.update({
-      where: { id: existingAnswer.id },
+    return this.prisma.interviewAnswer.create({
       data: {
+        questionId: createInterviewAnswerDto.questionId,
+        sessionId: createInterviewAnswerDto.sessionId,
         candidateAnswerText: createInterviewAnswerDto.candidateAnswerText,
-        updatedAt: new Date(),
       },
     });
   }
@@ -84,11 +78,11 @@ export class InterviewAnswerService {
     });
   }
 
-  async submitAnswers(body: any) {
-    const { sessionId } = body;
+  async submitAnswers(submitAnswersDto: SubmitAnswersDto) {
+    const { sessionId } = submitAnswersDto;
 
     if (!sessionId) {
-      throw new Error('Session ID is required');
+      throw new BadRequestException('Session ID is required');
     }
 
     await this.prisma.interviewSession.update({

@@ -9,7 +9,7 @@ model AIProviderConfig {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  @@map("AIProviderConfig")
   @@index([baseProvider])
   @@index([isActive])
+  @@map("AIProviderConfig")
 }

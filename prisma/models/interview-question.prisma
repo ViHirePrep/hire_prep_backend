@@ -1,18 +1,18 @@
 model InterviewQuestion {
-  id             String            @id @default(cuid())
+  id             String          @id @default(cuid())
   sessionId      String
-  questionText   String
-  questionType   QuestionType      @default(TEXT)
-  difficulty     DifficultyLevel   @default(MEDIUM)
+  questionText   String          
+  questionType   QuestionType    @default(TEXT)
+  difficulty     DifficultyLevel @default(MEDIUM)
   expectedAnswer String?
   timeLimit      Int?
   order          Int
-  createdAt      DateTime          @default(now())
-  updatedAt      DateTime          @updatedAt
-  answers        InterviewAnswer[]
-  session        InterviewSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
 
-  @@map("Question")
+  interviewAnswer  InterviewAnswer?
+  interviewSession InterviewSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
   @@index([sessionId])
   @@index([order])
 }

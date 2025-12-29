@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import axios from 'axios';
 
 import {
@@ -49,7 +49,7 @@ export class OpenAIProvider extends AbstractAIProvider {
       );
       return response.data.choices[0].message.content;
     } catch {
-      throw new Error('Failed to generate questions');
+      throw new InternalServerErrorException('Failed to generate questions');
     }
   }
 
@@ -85,7 +85,7 @@ export class OpenAIProvider extends AbstractAIProvider {
       );
       return response.data.choices[0].message.content;
     } catch {
-      throw new Error('Failed to evaluate interview');
+      throw new InternalServerErrorException('Failed to evaluate interview');
     }
   }
 }
