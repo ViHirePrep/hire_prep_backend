@@ -1,4 +1,4 @@
-enum Difficulty {
+enum DifficultyLevel {
   EASY
   MEDIUM
   HARD

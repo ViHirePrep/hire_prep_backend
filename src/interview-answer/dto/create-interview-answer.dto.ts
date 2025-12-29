@@ -7,10 +7,7 @@ export class CreateInterviewAnswerDto {
   @IsString()
   sessionId: string;
 
-  @IsString()
-  answerText: string;
-
   @IsOptional()
   @IsBoolean()
-  isFromSpeech?: boolean;
+  candidateAnswerText: string;
 }

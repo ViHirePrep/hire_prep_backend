@@ -1,8 +1,10 @@
 model JobDescription {
-  id                String             @id @default(cuid())
-  text              String
-  fileUrl           String?
-  uploadedBy        String
-  createdAt         DateTime           @default(now())
+  id               String             @id @default(cuid())
+  text             String
+  fileUrl          String?
+  uploadedBy       String
+  createdAt        DateTime           @default(now())
   interviewSessions InterviewSession[]
+
+  @@map("JobDescription")
 }

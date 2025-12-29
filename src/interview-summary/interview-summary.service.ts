@@ -45,7 +45,7 @@ export class InterviewSummaryService {
     });
 
     if (!session) {
-      throw new Error('Mock interview session not found');
+      throw new Error('Interview session not found');
     }
 
     const prompt = this.buildEvaluationPrompt(session, input.language);
@@ -62,14 +62,12 @@ export class InterviewSummaryService {
     session: any,
     language: 'en' | 'vi' = 'vi',
   ): string {
-    const questionsAndAnswers = session.questions.map((q: any) => ({
-      questionText: q.questionText,
-      expectedAnswer: q.expectedAnswer || 'No expected answer provided',
+    const questionsAndAnswers = session.questions.map((question: any) => ({
+      questionText: question.questionText,
+      expectedAnswer: question.expectedAnswer || 'No expected answer provided',
       candidateAnswer:
-        q.answers[0]?.candidateAnswerText ||
-        q.answers[0]?.answerText ||
-        'No answer provided',
-      difficulty: q.difficulty || 'MEDIUM',
+        question.answers[0]?.candidateAnswerText || 'No answer provided',
+      difficulty: question.difficulty,
     }));
 
     const promptBuilder = PromptBuilderFactory.get(language);

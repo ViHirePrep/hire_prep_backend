@@ -28,7 +28,7 @@ export class MockInterviewSpeechService {
       throw new BadRequestException('Mock interview session not found');
     }
 
-    const question = await this.prisma.question.findUnique({
+    const question = await this.prisma.interviewQuestion.findUnique({
       where: { id: input.questionId },
     });
 
@@ -44,8 +44,7 @@ export class MockInterviewSpeechService {
     const answer = await this.interviewAnswerService.create({
       questionId: input.questionId,
       sessionId: input.sessionId,
-      answerText: transcription.text,
-      isFromSpeech: true,
+      candidateAnswerText: transcription.text,
     });
 
     return {

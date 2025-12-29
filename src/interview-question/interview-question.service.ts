@@ -45,10 +45,9 @@ export class QuestionService {
     };
 
     const generatedQuestions = await this.aiService.generateQuestions(input);
-
     const savedQuestions = await Promise.all(
       generatedQuestions.map((question, index) =>
-        this.prisma.question.create({
+        this.prisma.interviewQuestion.create({
           data: {
             sessionId,
             questionText: question.questionText,
@@ -169,14 +168,14 @@ Cung cấp các câu hỏi với mức độ khó khác nhau phù hợp cho ứn
   }
 
   async findBySessionId(sessionId: string) {
-    return this.prisma.question.findMany({
+    return this.prisma.interviewQuestion.findMany({
       where: { sessionId },
       orderBy: { order: 'asc' },
     });
   }
 
   async findById(id: string) {
-    return this.prisma.question.findUnique({
+    return this.prisma.interviewQuestion.findUnique({
       where: { id },
     });
   }

@@ -1,24 +1,23 @@
 model InterviewSession {
-  id             String          @id @default(cuid())
+  id             String              @id @default(cuid())
   jdId           String?
   level          InterviewLevel
   numQuestions   Int
-  timeLimit      Int
-  status         SessionStatus   @default(PENDING)
+  timeLimit      Int?
+  status         SessionStatus       @default(PENDING)
   createdBy      String
-  uniqueLink     String          @unique
-  createdAt      DateTime        @default(now())
-  industry       Industry        @default(IT)
-  language       Language        @default(VIETNAMESE)
+  sessionLink    String              @unique
+  createdAt      DateTime            @default(now())
+  industry       Industry            @default(IT)
+  language       Language            @default(VIETNAMESE)
   position       String?
-  stack          TechStack?
   candidateEmail String
-  answers        Answer[]
-  jobDescription JobDescription? @relation(fields: [jdId], references: [id], onDelete: Cascade)
-  questions      Question[]
+  stack          TechStack?
+  answers        InterviewAnswer[]
+  jobDescription JobDescription?     @relation(fields: [jdId], references: [id], onDelete: Cascade)
+  questions      InterviewQuestion[]
 
   @@index([jdId])
-  @@index([uniqueLink])
   @@index([candidateEmail])
 }
 

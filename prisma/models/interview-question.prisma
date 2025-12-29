@@ -1,0 +1,24 @@
+model InterviewQuestion {
+  id             String            @id @default(cuid())
+  sessionId      String
+  questionText   String
+  questionType   QuestionType      @default(TEXT)
+  difficulty     DifficultyLevel   @default(MEDIUM)
+  expectedAnswer String?
+  timeLimit      Int?
+  order          Int
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  answers        InterviewAnswer[]
+  session        InterviewSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@map("Question")
+  @@index([sessionId])
+  @@index([order])
+}
+
+enum QuestionType {
+  TEXT
+  VIDEO
+  CODING
+}

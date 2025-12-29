@@ -8,6 +8,7 @@ model ActivityLog {
   newData   Json?
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@map("ActivityLog")
   @@index([userId])
   @@index([timestamp])
 }

@@ -6,9 +6,9 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
+import { QuestionService } from '../interview-question/interview-question.service';
 import { JobDescriptionService } from '../job-description/job-description.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { QuestionService } from '../question/question.service';
 
 import { CreateSessionDto } from './dto/create-session.dto';
 
@@ -20,53 +20,40 @@ export class InterviewSessionService {
     private readonly questionService: QuestionService,
   ) {}
 
-  async createSession(
+  async createInterviewSession(
     dto: CreateSessionDto,
     createdBy: string,
     candidateEmail: string,
   ) {
-    let jobDescription: {
-      id: string;
-      text: string;
-      fileUrl: string | null;
-      uploadedBy: string;
-      createdAt: Date;
-    } | null = null;
+    console.log(dto, 'haha');
     let jobDescriptionText: string | null = null;
+    let jdId: string | null = null;
 
-    // First check if jdId is provided to get existing job description
-    if (dto.jdId) {
-      jobDescription = await this.jobDescriptionService.findById(dto.jdId);
-
-      if (!jobDescription) {
-        throw new NotFoundException('Job description not found');
-      }
-
+    if (dto?.jobDescription) {
+      const jobDescription = await this.prisma.jobDescription.create({
+        data: {
+          text: dto.jobDescription,
+          uploadedBy: createdBy,
+        },
+      });
       jobDescriptionText = jobDescription.text;
-    }
-    // Otherwise, use the job description text if provided directly
-    else if (dto.jobDescription) {
-      jobDescriptionText = dto.jobDescription;
+      jdId = jobDescription.id;
     }
 
-    const uniqueLink = this.generateUniqueLink();
-
-    const timeLimit = dto.timeLimit || dto.numQuestions * 3;
-
-    const session = await this.prisma.interviewSession.create({
+    const sessionLink = this.generateSessionLink();
+    const interviewSession = await this.prisma.interviewSession.create({
       data: {
-        jdId: dto.jdId || null, // Still store jdId if provided
         level: dto.level,
         industry: dto.industry || 'IT',
         stack: dto.stack,
         position: dto.position,
         language: dto.language || 'VIETNAMESE',
         numQuestions: dto.numQuestions,
-        timeLimit,
         createdBy,
+        sessionLink,
         candidateEmail: candidateEmail,
-        uniqueLink,
         status: 'PENDING',
+        jdId,
       },
       include: {
         jobDescription: {
@@ -79,36 +66,36 @@ export class InterviewSessionService {
       },
     });
 
-    const languageCode = this.mapLanguageToCode(session.language);
+    const languageCode = this.mapLanguageToCode(interviewSession.language);
     await this.questionService.generateAndSaveQuestions(
-      session.id,
-      jobDescriptionText || null, // Use the job description text we determined
+      interviewSession.id,
+      jobDescriptionText || null,
       dto.level,
-      session.industry,
+      interviewSession.industry,
       dto.stack,
-      dto.position,
+      interviewSession.position || '',
       dto.numQuestions,
       languageCode,
       dto.aiProvider,
     );
 
     return {
-      id: session.id,
-      uniqueLink: session.uniqueLink,
-      level: dto.level,
-      industry: session.industry,
-      stack: session.stack,
-      position: session.position,
-      numQuestions: session.numQuestions,
-      timeLimit: session.timeLimit,
-      status: session.status,
-      invitedCandidateEmail: session.candidateEmail,
-      createdAt: session.createdAt,
-      jobDescription: session.jobDescription,
+      id: interviewSession.id,
+      sessionLink: interviewSession.sessionLink,
+      level: interviewSession.level,
+      industry: interviewSession.industry,
+      stack: interviewSession.stack,
+      position: interviewSession.position,
+      numQuestions: interviewSession.numQuestions,
+      timeLimit: interviewSession.timeLimit,
+      status: interviewSession.status,
+      invitedCandidateEmail: interviewSession.candidateEmail,
+      createdAt: interviewSession.createdAt,
+      jobDescription: interviewSession.jdId,
     };
   }
 
-  private generateUniqueLink(): string {
+  private generateSessionLink(): string {
     return randomBytes(16).toString('hex');
   }
 
@@ -134,9 +121,9 @@ export class InterviewSessionService {
     return session;
   }
 
-  async findByUniqueLink(uniqueLink: string) {
+  async findBySessionLink(sessionLink: string) {
     const session = await this.prisma.interviewSession.findUnique({
-      where: { uniqueLink },
+      where: { sessionLink },
       include: {
         jobDescription: true,
         questions: {

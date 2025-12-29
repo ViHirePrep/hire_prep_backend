@@ -27,6 +27,11 @@ export class InterviewAnswerController {
     return this.interviewAnswerService.create(createInterviewAnswerDto);
   }
 
+  @Post('save-answer')
+  async saveAnswer(@Body() createInterviewAnswerDto: CreateInterviewAnswerDto) {
+    return this.interviewAnswerService.saveAnswer(createInterviewAnswerDto);
+  }
+
   @Post('submit')
   async submitAnswers(@Body() body: any) {
     return this.interviewAnswerService.submitAnswers(body);

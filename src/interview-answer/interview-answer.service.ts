@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { Prisma } from '@prisma/client';
+
 import { InterviewSummaryService } from '../interview-summary/interview-summary.service';
+import { PrismaService } from '../prisma/prisma.service';
+
 import { CreateInterviewAnswerDto } from './dto/create-interview-answer.dto';
 import { UpdateInterviewAnswerDto } from './dto/update-interview-answer.dto';
 
@@ -13,17 +14,17 @@ export class InterviewAnswerService {
   ) {}
 
   async create(createInterviewAnswerDto: CreateInterviewAnswerDto) {
-    return this.prisma.answer.create({
+    return this.prisma.interviewAnswer.create({
       data: {
         questionId: createInterviewAnswerDto.questionId,
         sessionId: createInterviewAnswerDto.sessionId,
-        candidateAnswerText: createInterviewAnswerDto.answerText,
+        candidateAnswerText: createInterviewAnswerDto.candidateAnswerText,
       },
     });
   }
 
   async findAll() {
-    return this.prisma.answer.findMany({
+    return this.prisma.interviewAnswer.findMany({
       include: {
         question: true,
       },
@@ -31,7 +32,7 @@ export class InterviewAnswerService {
   }
 
   async findOne(id: string) {
-    return this.prisma.answer.findUnique({
+    return this.prisma.interviewAnswer.findUnique({
       where: { id },
       include: {
         question: true,
@@ -40,7 +41,7 @@ export class InterviewAnswerService {
   }
 
   async findBySession(sessionId: string) {
-    return this.prisma.answer.findMany({
+    return this.prisma.interviewAnswer.findMany({
       where: { sessionId },
       include: {
         question: true,
@@ -51,62 +52,43 @@ export class InterviewAnswerService {
     });
   }
 
+  async saveAnswer(createInterviewAnswerDto: CreateInterviewAnswerDto) {
+    const existingAnswer = await this.prisma.interviewAnswer.findFirst({
+      where: {
+        sessionId: createInterviewAnswerDto.sessionId,
+        questionId: createInterviewAnswerDto.questionId,
+      },
+    });
+
+    if (!existingAnswer) throw new Error('Answer not found');
+
+    return this.prisma.interviewAnswer.update({
+      where: { id: existingAnswer.id },
+      data: {
+        candidateAnswerText: createInterviewAnswerDto.candidateAnswerText,
+        updatedAt: new Date(),
+      },
+    });
+  }
+
   async update(id: string, updateInterviewAnswerDto: UpdateInterviewAnswerDto) {
-    return this.prisma.answer.update({
+    return this.prisma.interviewAnswer.update({
       where: { id },
       data: updateInterviewAnswerDto,
     });
   }
 
   async remove(id: string) {
-    return this.prisma.answer.delete({
+    return this.prisma.interviewAnswer.delete({
       where: { id },
     });
   }
 
   async submitAnswers(body: any) {
-    const { sessionId, ...answerData } = body;
+    const { sessionId } = body;
 
     if (!sessionId) {
       throw new Error('Session ID is required');
-    }
-
-    const answerEntries = Object.entries(answerData).filter(([key]) =>
-      key.startsWith('answer_'),
-    );
-
-    const results: Prisma.AnswerGetPayload<{}>[] = [];
-    for (const [key, value] of answerEntries) {
-      const questionId = key.replace('answer_', '');
-
-      const answerText =
-        typeof value === 'string' ? value : JSON.stringify(value);
-
-      const existingAnswer = await this.prisma.answer.findFirst({
-        where: {
-          sessionId,
-          questionId,
-        },
-      });
-
-      if (existingAnswer) {
-        const updatedAnswer = await this.prisma.answer.update({
-          where: { id: existingAnswer.id },
-          data: {
-            candidateAnswerText: answerText,
-          },
-        });
-        results.push(updatedAnswer);
-      } else {
-        const newAnswer = await this.prisma.answer.create({
-          data: {
-            sessionId,
-            questionId,
-            candidateAnswerText: answerText,
-          },
-        });
-        results.push(newAnswer);
-      }
     }
 
     await this.prisma.interviewSession.update({
@@ -114,17 +96,14 @@ export class InterviewAnswerService {
       data: { status: 'COMPLETED' },
     });
 
-    this.interviewSummaryService
-      .generateSummary({
-        sessionId,
-        language: 'en',
-      })
-      .catch(() => {});
+    const interviewSummary = this.interviewSummaryService.generateSummary({
+      sessionId,
+      language: 'vi',
+    });
 
     return {
       success: true,
-      count: results.length,
-      answers: results,
+      answers: interviewSummary,
     };
   }
 }

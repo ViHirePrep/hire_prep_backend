@@ -32,8 +32,8 @@ export class InterviewSessionController {
       ttl: AI_RATE_LIMIT_CONFIG.CREATE_SESSION.ttl,
     },
   })
-  async createSession(@Body() dto: CreateSessionDto, @Req() req: any) {
-    return this.interviewSessionService.createSession(
+  createSession(@Body() dto: CreateSessionDto, @Req() req: any) {
+    return this.interviewSessionService.createInterviewSession(
       dto,
       req?.user?.userId || '',
       req?.user?.email || '',
@@ -50,9 +50,9 @@ export class InterviewSessionController {
     return this.interviewSessionService.findById(id);
   }
 
-  @Get('link/:uniqueLink')
-  async getSessionByLink(@Param('uniqueLink') uniqueLink: string) {
-    return this.interviewSessionService.findByUniqueLink(uniqueLink);
+  @Get('link/:sessionLink')
+  async getSessionByLink(@Param('sessionLink') sessionLink: string) {
+    return this.interviewSessionService.findBySessionLink(sessionLink);
   }
 
   @Delete(':id')

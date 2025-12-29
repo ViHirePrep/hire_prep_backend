@@ -43,10 +43,6 @@ export enum Language {
 export class CreateSessionDto {
   @IsOptional()
   @IsString()
-  jdId?: string;
-
-  @IsOptional()
-  @IsString()
   jobDescription?: string;
 
   @IsEnum(InterviewLevel)
